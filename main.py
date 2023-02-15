@@ -191,6 +191,7 @@ def disabled():
     #disabled()
 
 #new
+"""
 temp = pin13.value
 temp2 = pin12.value<<1
 temp3 = pin11.value<<2
@@ -219,9 +220,21 @@ print(pin12.value)
 print(pin13.value)
 
 time.sleep(5)
+"""
 
 
 while True:
+    #pin13=1st digit,pin12=2nd digit,pin11=3rd digit,pin10=4th digit, pin9=5th digit
+    pin13_ = pin13.value<<0
+    pin12_ = pin12.value<<1
+    pin11_ = pin11.value<<2
+    pin10_ = pin10.value<<3
+    pin9_ = pin9.value<<4
+    print(pin13, pin12, pin11, pin10, pin9)
+
+    pin_bitvalues_total = (pin13+pin12+pin11+pin10+pin9))
+    print(pin_bitvalues_total)
+
     print('start loop')
 
     print('starting blinkingCube')
