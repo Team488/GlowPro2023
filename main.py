@@ -234,22 +234,30 @@ while True:
     else:
         allianceColor = (255, 0, 0)
 
-    temp = pin13.value
-    temp2 = pin12.value<<1
-    temp3 = pin11.value<<2
-    temp4 = pin10.value<<3
-    temp5 = pin9.value<<4
+    temp = (pin9.value)<<0
+    temp1 = (pin10.value)<<1
+    temp2 = (pin11.value)<<2
+    temp3 = (pin12.value)<<3
+    temp4 = (pin13.value)<<4
 
-    temp_total = (temp+temp2+temp3+temp4+temp5)
+    temp_total = (temp+temp2+temp3+temp4)
     print('temp_total: ', temp_total)
+    print('temp: ', temp)
+    print('temp2: ', temp2)
+    print('temp3: ', temp3)
+    print('temp4: ', temp4)
 
     if temp_total == 0:
         no_code()
-    else:
+    elif temp_total == 1:
+        disabled()
+    elif temp_total == 2:
         enabled()
+    else:
+        disabled()
 
 
-    time.sleep(0.1)
+    time.sleep(1)
 
     # print('starting blinkingCube')
     # blinkingCube()
