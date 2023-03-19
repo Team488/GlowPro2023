@@ -19,14 +19,14 @@ import neopixel
 ######  Input mapping for light display: 
 ######  [pin13][pin12][pin11][pin10][pin9]
 ###### 
-######  Input   Number  Mode
-######  11111   31      NO_CODE
-######  00001   1       DISABLED
-######  00010   2       CONE_MODE
-######  00011   3       CUBE_MODE
-######  00100   4       blinkingCone
-######  00101   5       blinkingCube
-######  
+######  Input   Number  Mode        Function
+######  11111   31      no code     NO_CODE (should be 0?)
+######  00001   1       disabled    DISABLED
+######  00010   2       cone mode   display_Cone
+######  00011   3       cube mode   display_Cube
+######  00100   4       cone acq.   blinkingCone
+######  00101   5       cube acq.   blinkingCube
+######  00110   6       enabled     enabled
 ######  
 ######  
 ######  
@@ -88,14 +88,7 @@ pin13.pull = Pull.DOWN
 ######  color display functions
 #############################################
 '''
-def enabled(isCone,current_mode):
-    if isCone:
-        color = (255, 165, 0)
-    else:
-        color = (145, 0, 255)
-    for i in range(15, 20, 1):
-        pixels[i]=color
-
+def enabled(current_mode):
     for countdown in range(steps, 1, -1):
         if read_current_mode() != current_mode:
             return
@@ -113,11 +106,11 @@ def enabled(isCone,current_mode):
         time.sleep(wait)
 
 def no_code():
-    for noCode in range(20):
+    for noCode in range(15):
         pixels[noCode]=(255, 0, 0)
     pixels.show()
     time.sleep(0.3)
-    for noCode in range(20):
+    for noCode in range(15):
         pixels[noCode]=(0, 0, 0)
     pixels.show()
     time.sleep(0.3)
@@ -126,7 +119,7 @@ def disabled(current_mode):
     for countdown in range(steps, 1, -1):
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 20):
+        for i in range(0, 15):
             pixels[i]=(255*countdown/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
@@ -134,15 +127,23 @@ def disabled(current_mode):
     for countup in range(1, steps, 1):
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 20):
+        for i in range(0, 15):
             pixels[i]=(255*countup/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
 
+def display_Cube():
+    for i in range(15, 20, 1):
+        pixels[i]=(145, 0, 255)
+    pixels.show()
+
+def display_Cone():
+    for i in range(15, 20, 1):
+        pixels[i]=(255, 165, 0)
+    pixels.show()
+
 def blinkingCube():
-    for cube in range(15, 20, 1):
-        pixels[cube]=(255, 0, 0)
-    for cube in range(0, 15):
+    for cube in range(15):
         pixels[cube]=(145, 0, 255)
     pixels.show()
     time.sleep(0.3)
@@ -152,9 +153,7 @@ def blinkingCube():
     time.sleep(0.2)
 
 def blinkingCone():
-    for cube in range(15, 20, 1):
-        pixels[cube]=(255, 0, 0)
-    for cone in range(0, 15):
+    for cone in range(15):
         pixels[cone]=(255, 165, 0)
     pixels.show()
     time.sleep(0.3)
@@ -162,6 +161,11 @@ def blinkingCone():
         pixels[cone]=(0, 0, 0)
     pixels.show()
     time.sleep(0.2)
+
+def display_alliance(color):
+    for i in range(15, 20, 1):
+        pixels[i]=color
+    pixels.show()
 
 '''
 #############################################
@@ -188,9 +192,9 @@ def main():
     mode = read_current_mode()
 
     if pin_alliance.value == 1:
-        allianceColor = (0, 0, 255)
+        display_alliance((0, 0, 255))
     else:
-        allianceColor = (255, 0, 0)
+        display_alliance((255, 0, 0))
     
     #Select display option
     if mode == 31:
@@ -198,17 +202,17 @@ def main():
     elif mode == 1:
         disabled(mode)
     elif mode == 2:
-        enabled(True,mode)
+        display_Cone()
     elif mode == 3:
-        enabled(False,mode)
+        display_Cube()
     elif mode == 4:
         blinkingCone()
     elif mode == 5:
         blinkingCube()
+    elif mode == 6:
+        enabled(mode)
     else:
         disabled(mode)
-
-    #time.sleep(0.01)
 
 while True:
     main()
