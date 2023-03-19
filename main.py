@@ -14,7 +14,7 @@ num_pixels = 20
 
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False)
 
-PIN_ALLIANCE = 7
+ALLIANCE_LEDS = 5
 
 print('Starting!')
 
@@ -87,7 +87,6 @@ pin13.pull = Pull.DOWN
 
 pin_alliance = pin7
 
-#allianceColor=(255, 0, 0)
 allianceColor=(0, 0, 255)
 
 def blinkingCube():
@@ -141,29 +140,36 @@ def enable():
 
 
 count=0 
-def enabled():
-    #while True:
+def enabled(isCone):
+    current_mode = read_current_mode()
+    #print('start of loop 1')
+    if isCone:
+        color = (255, 165, 0)
+    else:
+        color = (145, 0, 255)
+    for i in range(15, 20, 1):
+        pixels[i]=color
 
-        #print('start of loop 1')
-        for alliance in range(15, 20, 1):
-            pixels[alliance]=allianceColor
+    steps=30
+    wait=0.04
+    for countdown in range(steps, 1, -1):
+        if read_current_mode() != current_mode:
+            return
+        for enabled in range(0, 15):
+            pixels[enabled]=(0, 255*countdown/steps, 0)
+        pixels.show()
+        time.sleep(wait)
+        #print('brightness down')
 
-        steps=30
-        wait=0.04
-        for countdown in range(steps, 1, -1):
-            for enabled in range(0, 15):
-                pixels[enabled]=(0, 255*countdown/steps, 0)
-            pixels.show()
-            time.sleep(wait)
-            #print('brightness down')
-
-        for countup in range(1, steps, 1):
-            #print('in loop 1')
-            for enabled in range(0, 15):
-                pixels[enabled]=(0, 255*countup/steps, 0)
-            pixels.show()
-            time.sleep(wait)
-            #print('brightness up')
+    for countup in range(1, steps, 1):
+        if read_current_mode() != current_mode:
+            return
+        #print('in loop 1')
+        for enabled in range(0, 15):
+            pixels[enabled]=(0, 255*countup/steps, 0)
+        pixels.show()
+        time.sleep(wait)
+        #print('brightness up')
 
 #while True:
  #   enabled()
@@ -183,14 +189,28 @@ def no_code():
     #noCode()
 
 def disabled():
-    for disabled in range(0, 15):
-        pixels[disabled]=(255, 0, 0)
+    current_mode = read_current_mode()
+
+    steps=30
+    wait=0.04
+    for countdown in range(steps, 1, -1):
+        if read_current_mode() != current_mode:
+            return
+        for enabled in range(0, 20):
+            pixels[enabled]=(255*countdown/steps, 0, 0)
         pixels.show()
-    for alliance in range(15, 20):
-        pixels[alliance]=(allianceColor)
-        pixels.show
-#while True:
-    #disabled()
+        time.sleep(wait)
+        #print('brightness down')
+
+    for countup in range(1, steps, 1):
+        if read_current_mode() != current_mode:
+            return
+        #print('in loop 1')
+        for enabled in range(0, 20):
+            pixels[enabled]=(255*countup/steps, 0, 0)
+        pixels.show()
+        time.sleep(wait)
+        #print('brightness up')
 
 #new
 """
@@ -224,6 +244,34 @@ print(pin13.value)
 time.sleep(5)
 """
 
+"""
+        RobotNotBooted(0),
+        RobotDisabled(1),
+        ConeMode(2),
+        CubeMode(3),
+        ConeCollected(4),
+        CubeCollected(5);
+"""
+NO_CODE = 1 + 2 + 4 + 8 + 16
+DISABLED = 1
+CONE_MODE = 2
+CUBE_MODE = 3
+CONE_COLLECTED = 4
+CUBE_COLLECTED = 5
+
+def read_current_mode():
+    temp = int(pin9.value)
+    temp1 = (pin10.value)<<1
+    temp2 = (pin11.value)<<2
+    temp3 = (pin12.value)<<3
+    temp4 = (pin13.value)<<4
+
+    temp_total = (temp+temp1+temp2+temp3+temp4)
+    
+    # print(temp, temp1, temp2, temp3, temp4)
+    # print('temp_total: ', temp_total)
+
+    return temp_total
 
 while True:
 
@@ -234,30 +282,24 @@ while True:
     else:
         allianceColor = (255, 0, 0)
 
-    temp = (pin9.value)<<0
-    temp1 = (pin10.value)<<1
-    temp2 = (pin11.value)<<2
-    temp3 = (pin12.value)<<3
-    temp4 = (pin13.value)<<4
+    mode = read_current_mode()
 
-    temp_total = (temp+temp2+temp3+temp4)
-    print('temp_total: ', temp_total)
-    print('temp: ', temp)
-    print('temp2: ', temp2)
-    print('temp3: ', temp3)
-    print('temp4: ', temp4)
-
-    if temp_total == 0:
+    if mode == NO_CODE:
         no_code()
-    elif temp_total == 1:
+    elif mode == DISABLED:
         disabled()
-    elif temp_total == 2:
-        enabled()
+    elif mode == CONE_MODE:
+        enabled(True)
+    elif mode == CUBE_MODE:
+        enabled(False)
+    elif mode == CONE_COLLECTED:
+        no_code()
+    elif mode == CUBE_COLLECTED:
+        no_code()
     else:
         disabled()
 
-
-    time.sleep(1)
+    time.sleep(0.01)
 
     # print('starting blinkingCube')
     # blinkingCube()
