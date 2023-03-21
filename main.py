@@ -219,7 +219,8 @@ def disabled():
 def moving_rainbow():    
     global movingRainbow
     current_mode = read_current_mode()
-    for r in range(num_pixels):
+    display_cube_cone()
+    for r in get_lower_leds_range():
         if read_current_mode() != current_mode:
             return
         pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
