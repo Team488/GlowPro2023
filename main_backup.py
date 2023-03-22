@@ -14,7 +14,13 @@ num_pixels = 20
 
 pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False)
 
-ALLIANCE_LEDS = 5
+movingRainbow = 0
+
+def get_cone_cube_leds_range():
+    return range(15, 20)
+
+def get_lower_leds_range():
+    return range(0, 15)
 
 print('Starting!')
 
@@ -54,9 +60,12 @@ pin13 = DigitalInOut(board.D13)
 pin13.direction = Direction.INPUT
 pin13.pull = Pull.DOWN
 
-pin_alliance = pin7
+pin_cube_mode = pin7
 
-allianceColor=(0, 0, 255)
+COLOR_CUBE = (145, 0, 255)
+COLOR_CONE = (255, 165, 0)
+
+cone_cube_color = COLOR_CUBE
 
 def blinkingCube():
     for cube in range(15, 20, 1):
@@ -109,32 +118,27 @@ def enable():
 
 
 count=0 
-def enabled(isCone):
+def enabled():
     current_mode = read_current_mode()
-    #print('start of loop 1')
-    if isCone:
-        color = (255, 165, 0)
-    else:
-        color = (145, 0, 255)
-    for i in range(15, 20, 1):
-        pixels[i]=color
 
     steps=30
     wait=0.04
     for countdown in range(steps, 1, -1):
+        display_cube_cone()
         if read_current_mode() != current_mode:
             return
-        for enabled in range(0, 15):
+        for enabled in get_lower_leds_range():
             pixels[enabled]=(0, 255*countdown/steps, 0)
         pixels.show()
         time.sleep(wait)
         #print('brightness down')
 
     for countup in range(1, steps, 1):
+        display_cube_cone()
         if read_current_mode() != current_mode:
             return
         #print('in loop 1')
-        for enabled in range(0, 15):
+        for enabled in get_lower_leds_range():
             pixels[enabled]=(0, 255*countup/steps, 0)
         pixels.show()
         time.sleep(wait)
@@ -165,7 +169,7 @@ def disabled():
     for countdown in range(steps, 1, -1):
         if read_current_mode() != current_mode:
             return
-        for enabled in range(0, 20):
+        for enabled in range(num_pixels):
             pixels[enabled]=(255*countdown/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
@@ -175,11 +179,30 @@ def disabled():
         if read_current_mode() != current_mode:
             return
         #print('in loop 1')
-        for enabled in range(0, 20):
+        for enabled in range(num_pixels):
             pixels[enabled]=(255*countup/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
         #print('brightness up')
+
+def moving_rainbow():    
+    global movingRainbow
+    current_mode = read_current_mode()
+    display_cube_cone()
+    for r in get_lower_leds_range():
+        if read_current_mode() != current_mode:
+            return
+        pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
+        pixels.show()
+    movingRainbow = movingRainbow+1
+
+def display_cube_cone():
+    if pin_cube_mode.value:
+        cone_cube_color = COLOR_CUBE
+    else:
+        cone_cube_color = COLOR_CONE
+    for i in get_cone_cube_leds_range():
+        pixels[i]=cone_cube_color
 
 #new
 """
@@ -213,27 +236,28 @@ print(pin13.value)
 time.sleep(5)
 """
 
+# This is what the robot think things map to, copied from: 
+# https://github.com/Team488/TeamXbot2023/blob/6e1d3166b31a5ae282cb57cadb626e917ecaaf5b/src/main/java/competition/subsystems/lights/LightsCommunicationSubsystem.java#L44
 """
+    public enum LightsStateMessage {
         RobotNotBooted(0),
         RobotDisabled(1),
-        ConeMode(2),
-        CubeMode(3),
-        ConeCollected(4),
-        CubeCollected(5);
+        Enabled(2),
+        GamePieceCollected(3);
 """
-NO_CODE = 1 + 2 + 4 + 8 + 16
+# these are the values sent by the rio via the binary bits:
+NO_CODE = 1 + 2 + 4 + 8 + 16 # with no code, all the bits are high by default (we can't control this)
 DISABLED = 1
-CONE_MODE = 2
-CUBE_MODE = 3
-CONE_COLLECTED = 4
-CUBE_COLLECTED = 5
+ENABLED = 2
+GAME_PIECE_COLLECTED = 3
 
+# Read the binary bits sent by the rio and turn them into a single integer number
 def read_current_mode():
-    temp = int(pin9.value)
-    temp1 = (pin10.value)<<1
-    temp2 = (pin11.value)<<2
-    temp3 = (pin12.value)<<3
-    temp4 = (pin13.value)<<4
+    temp = pin9.value << 0
+    temp1 =  pin10.value << 1
+    temp2 =  pin11.value << 2
+    temp3 =  pin12.value << 3
+    temp4 =  pin13.value << 4
 
     temp_total = (temp+temp1+temp2+temp3+temp4)
     
@@ -243,91 +267,24 @@ def read_current_mode():
     return temp_total
 
 while True:
-
-    # Read from pins
-
-    if pin_alliance.value:
-        allianceColor = (0, 0, 255)
-    else:
-        allianceColor = (255, 0, 0)
-
     mode = read_current_mode()
+    # print('mode: ', mode)
 
+    # based on the current mode, display different things
     if mode == NO_CODE:
         no_code()
     elif mode == DISABLED:
         disabled()
-    elif mode == CONE_MODE:
-        enabled(True)
-    elif mode == CUBE_MODE:
-        enabled(False)
-    elif mode == CONE_COLLECTED:
-        no_code()
-    elif mode == CUBE_COLLECTED:
-        no_code()
+    elif mode == ENABLED:
+        enabled()
+    elif mode == GAME_PIECE_COLLECTED:
+        moving_rainbow()
     else:
+        # TODO: This should let us know we messed up 
+        # and we should fix the code to handle the new mode
         disabled()
-
-    time.sleep(0.01)
 
     # print('starting blinkingCube')
     # blinkingCube()
     # time.sleep(1)
     # print('ending blinkingCube')
-
-    '''print('starting blinkingCone')
-    blinkingCone()
-    time.sleep(1)
-    print('ending blinkingCone')
-
-    print('starting enabled')
-    enabled()
-    time.sleep(1)
-    print('ending enabled')
-
-    print('starting noCode')
-    noCode()
-    time.sleep(1)
-    print('ending noCode')
-
-    print('starting disabled')
-    disabled()
-    time.sleep(1)
-    print('ending disabled')'''
-
-
-
-####### EXTRAS ########
-
-'''def lowBattery():
-    for lowBattery in range(20):
-        pixels[lowBattery]=(0, 255, 0)
-    pixels.show()
-    time.sleep(5/count)
-    for lowBattery in range(20):
-        pixels[lowBattery]=(240, 70, 0)
-    pixels.show()
-    time.sleep(1)
-
-    if count < 4:
-        for lowBattery in range(20):
-            pixels[lowBattery]=(0, 255, 0)
-        pixels.show()
-        time.sleep(5/count)
-        for lowBattery in range(20):
-            pixels[lowBattery]=(240, 70, 0)
-        pixels.show()
-        time.sleep(1)
-
-    elif count >= 4 and count >= 8:
-        for lowBattery in range(20):
-            pixels[lowBattery]=(240, 70, 0)
-        pixels.show()
-        time.sleep(5/(count-3))
-        for lowBattery in range(20):
-            pixels[lowBattery]=(255, 0, 0)
-        pixels.show()
-        time.sleep(1)
-
-    else:
-        pixels[lowBattery]=(255, 0, 0)'''

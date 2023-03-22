@@ -20,13 +20,14 @@ import neopixel
 ######  [pin13][pin12][pin11][pin10][pin9]
 ###### 
 ######  Input   Number  Mode        Function
-######  11111   31      no code     NO_CODE (should be 0?)
+######  11111   31      no code     NO_CODE
+######  00000   0       not_booted  
 ######  00001   1       disabled    DISABLED
-######  00010   2       cone mode   display_Cone
+######  00010   2       enabled     enabled
 ######  00011   3       cube mode   display_Cube
 ######  00100   4       cone acq.   blinkingCone
 ######  00101   5       cube acq.   blinkingCube
-######  00110   6       enabled     enabled
+######  00110   6       cone mode   display_Cone
 ######  
 ######  
 ######  
@@ -192,9 +193,9 @@ def main():
     mode = read_current_mode()
 
     if pin_alliance.value == 1:
-        display_alliance((0, 0, 255))
+        display_alliance((145, 0, 255))
     else:
-        display_alliance((255, 0, 0))
+        display_alliance((255, 165, 0))
     
     #Select display option
     if mode == 31:
@@ -202,7 +203,7 @@ def main():
     elif mode == 1:
         disabled(mode)
     elif mode == 2:
-        display_Cone()
+        enabled(mode)
     elif mode == 3:
         display_Cube()
     elif mode == 4:
@@ -210,7 +211,7 @@ def main():
     elif mode == 5:
         blinkingCube()
     elif mode == 6:
-        enabled(mode)
+        display_Cone()
     else:
         disabled(mode)
 
