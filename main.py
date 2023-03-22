@@ -52,7 +52,7 @@ allianceColor=(0, 0, 0)
 steps=30
 wait=0.04
 
-conecube_length = 15
+conecube_length = 10
 
 '''
 #############################################
