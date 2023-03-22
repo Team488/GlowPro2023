@@ -19,20 +19,26 @@ from rainbowio import colorwheel
 ######  Input mapping for light display: 
 ######  [pin13][pin12][pin11][pin10][pin9]
 ###### 
-######  Input   Number  Mode        Function
-######  11111   31      no code     NO_CODE
-######  00000   0       not_booted  
-######  00001   1       disabled    DISABLED
-######  00010   2       enabled     enabled
-######  00011   3       cube mode   display_Cube
-######  00100   4       cone acq.   blinkingCone
-######  00101   5       cube acq.   blinkingCube
-######  00110   6       cone mode   display_Cone
+######  Input   Number  Mode            Function
+######  11111   31      no code         NO_CODE
+######  00000   0         
+######  00001   1       disabled        DISABLED
+######  00010   2       enabled         enabled
+######  00011   3       GamePiece       GamePiece_Collected
+######  00100   4       arm_Position    ARM_IN_SCORING_POSITION
+######  00101   5       cube acq.       blinkingCube
+######  00110   6       cone mode       display_Cone
 ######  
 ######  
 ######  
 #############################################
-
+'''
+#NO_CODE = 31 # with no code, all the bits are high by default (we can't control this)
+#DISABLED = 1
+#ENABLED = 2
+#GAME_PIECE_COLLECTED = 3
+#ARM_IN_SCORING_POSITION = 4
+'''
 #############################################
 ######  setup board output & neopixel light strip objects
 #############################################
@@ -40,16 +46,13 @@ from rainbowio import colorwheel
 pixel_pin = board.D5
 num_pixels = 20
 
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False)
+pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1, auto_write=False)
 
 allianceColor=(0, 0, 0)
 steps=30
 wait=0.04
 
 conecube_length = 15
-current_mode_length = 20-conecube_length
-
-movingRainbow = 0
 
 '''
 #############################################
@@ -87,8 +90,6 @@ pin13 = DigitalInOut(board.D13)
 pin13.direction = Direction.INPUT
 pin13.pull = Pull.DOWN
 
-
-
 '''
 #############################################
 ######  color display functions
@@ -99,102 +100,100 @@ def enabled(current_mode):
         read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(current_mode_length):
+        for i in range((20-conecube_length)):
             pixels[i]=(0, 255*countdown/steps, 0)
         pixels.show()
         time.sleep(wait)
-
     for countup in range(1, steps, 1):
         read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(current_mode_length):
+        for i in range((20-conecube_length)):
             pixels[i]=(0, 255*countup/steps, 0)
         pixels.show()
         time.sleep(wait)
 
-def no_code():
-    for noCode in range(current_mode_length):
+def RobotNotBooted():
+    for noCode in range(20):
         pixels[noCode]=(255, 0, 0)
     pixels.show()
     time.sleep(0.3)
-    for noCode in range(current_mode_length):
+    for noCode in range(20):
         pixels[noCode]=(0, 0, 0)
     pixels.show()
     time.sleep(0.3)
 
-def disabled(current_mode):
+def RobotDisabled(current_mode):
     for countdown in range(steps, 1, -1):
-        read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(current_mode_length):
+        for i in range(20): #disabled takes priority over conecube mode
             pixels[i]=(255*countdown/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
-
     for countup in range(1, steps, 1):
         read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(current_mode_length):
+        for i in range(20):
             pixels[i]=(255*countup/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
 
+def arm_Position():
+    for i in range((20-conecube_length)):
+        pixels[i]=(0, 255, 0)
+    pixels.show()
+
 def display_Cube():
-    for i in range(current_mode_length):
+    for i in range((20-conecube_length)):
         pixels[i]=(145, 0, 255)
     pixels.show()
 
 def display_Cone():
-    for i in range(current_mode_length):
+    for i in range((20-conecube_length)):
         pixels[i]=(255, 165, 0)
     pixels.show()
 
 def blinkingCube():
-    for cube in range(current_mode_length):
+    for cube in range((20-conecube_length)):
         pixels[cube]=(145, 0, 255)
     pixels.show()
     time.sleep(0.3)
-    for cube in range(current_mode_length):
+    for cube in range((20-conecube_length)):
         pixels[cube]=(0, 0, 0)
     pixels.show()
     time.sleep(0.2)
 
 def blinkingCone():
-    for cone in range(current_mode_length):
+    for cone in range((20-conecube_length)):
         pixels[cone]=(255, 165, 0)
     pixels.show()
     time.sleep(0.3)
-    for cone in range(current_mode_length):
+    for cone in range((20-conecube_length)):
         pixels[cone]=(0, 0, 0)
     pixels.show()
     time.sleep(0.2)
 
-def display_alliance(color):
+def display_conecube(color): #does not have a show for fast execution
     for i in range(20-conecube_length, 20, 1):
         pixels[i]=color
-    pixels.show()
 
-
-def moving_rainbow():    
-    global movingRainbow
+def GamePiece_Collected():    
+    movingRainbow = 0
     current_mode = read_current_mode()
-    read_conecube_mode()
-    for r in range(current_mode_length):
-        if read_current_mode() != current_mode:
-            return
-        pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
-        pixels.show()
-    movingRainbow = movingRainbow+1
+    while read_current_mode() == current_mode:
+        for r in range((20-conecube_length)):
+            read_conecube_mode()
+            pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
+            pixels.show()
+        movingRainbow = movingRainbow+1
 
 '''
 #############################################
 ######  get current input from robot
 #############################################
 '''
-
 def read_current_mode():
     temp = int(pin9.value)
     temp1 = int(pin10.value)<<1
@@ -203,22 +202,11 @@ def read_current_mode():
     temp4 = int(pin13.value)<<4
     return (temp+temp1+temp2+temp3+temp4)
 
-'''
-#########################################################
-#######   get current input from robot for cone/cube
-'''
-
 def read_conecube_mode():
     if pin_conecube.value == 1:
-        display_alliance((145, 0, 255))
+        display_conecube((145, 0, 255))
     else:
-        display_alliance((255, 165, 0))
-    pixels.show()
-
-
-#############################################
-######  main loop
-#############################################
+        display_conecube((255, 165, 0))
 
 def main():
     # Read mode and alliance from pins
@@ -226,29 +214,28 @@ def main():
     read_conecube_mode()
     
     #Select display option
-    if mode == 31:
-        no_code()
-    elif mode == 1:
-        disabled(mode)
-    elif mode == 2:
+    if mode == 31:#NO_CODE:
+        RobotNotBooted()
+    elif mode == 1:#DISABLED:
+        RobotDisabled(mode)
+    elif mode == 2:#ENABLED:
         enabled(mode)
-    elif mode == 3:
-        movingRainbow()
-    elif mode == 4:
-        blinkingCone()
+    elif mode == 3:#GAME_PIECE_COLLECTED:
+        GamePiece_Collected()
+    elif mode == 4:#ARM_IN_SCORING_POSITION:
+        arm_Position()
     elif mode == 5:
         blinkingCube()
     elif mode == 6:
         display_Cone()
     else:
-        disabled(mode)
+        RobotDisabled(mode)
 
 while True:
     main()
 
 
 ####### EXTRAS ########
-
 '''def lowBattery():
     for lowBattery in range(20):
         pixels[lowBattery]=(0, 255, 0)
