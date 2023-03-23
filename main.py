@@ -138,6 +138,19 @@ def disabled():
         pixels.show()
         wait_and_check(wait)
 
+def disabled_with_auto():
+    for i in range(num_pixels):
+        pixels[i]=(20, 50, 20)
+    for countdown in range(steps, 1, -1):
+        pixels.brightness = countdown/steps
+        pixels.show()
+        wait_and_check(wait)
+
+    for countup in range(1, steps, 1):
+        pixels.brightness = countup/steps
+        pixels.show()
+        wait_and_check(wait)
+
 def blinkingCube():
     for cube in range(current_mode_length):
         pixels[cube]=(145, 0, 255)
@@ -229,7 +242,7 @@ def main():
         elif mode == 3:
             moving_rainbow()
         elif mode == 4:
-            blinkingCone()
+            disabled_with_auto()
         elif mode == 5:
             blinkingCube()
         else:
