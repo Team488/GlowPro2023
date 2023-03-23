@@ -46,6 +46,11 @@ allianceColor=(0, 0, 0)
 steps=30
 wait=0.04
 
+conecube_length = 15
+current_mode_length = 20-conecube_length
+
+movingRainbow = 0
+
 '''
 #############################################
 ######  setup pins for input
@@ -53,9 +58,9 @@ wait=0.04
 '''
 
 #pin7
-pin_alliance = DigitalInOut(board.D7)
-pin_alliance.direction = Direction.INPUT
-pin_alliance.pull = Pull.DOWN
+pin_conecube = DigitalInOut(board.D7)
+pin_conecube.direction = Direction.INPUT
+pin_conecube.pull = Pull.DOWN
 
 #pin9
 pin9 = DigitalInOut(board.D9)
@@ -91,82 +96,98 @@ pin13.pull = Pull.DOWN
 '''
 def enabled(current_mode):
     for countdown in range(steps, 1, -1):
+        read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 15):
+        for i in range(current_mode_length):
             pixels[i]=(0, 255*countdown/steps, 0)
         pixels.show()
         time.sleep(wait)
 
     for countup in range(1, steps, 1):
+        read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 15):
+        for i in range(current_mode_length):
             pixels[i]=(0, 255*countup/steps, 0)
         pixels.show()
         time.sleep(wait)
 
 def no_code():
-    for noCode in range(15):
+    for noCode in range(current_mode_length):
         pixels[noCode]=(255, 0, 0)
     pixels.show()
     time.sleep(0.3)
-    for noCode in range(15):
+    for noCode in range(current_mode_length):
         pixels[noCode]=(0, 0, 0)
     pixels.show()
     time.sleep(0.3)
 
 def disabled(current_mode):
     for countdown in range(steps, 1, -1):
+        read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 15):
+        for i in range(current_mode_length):
             pixels[i]=(255*countdown/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
 
     for countup in range(1, steps, 1):
+        read_conecube_mode()
         if read_current_mode() != current_mode:
             return
-        for i in range(0, 15):
+        for i in range(current_mode_length):
             pixels[i]=(255*countup/steps, 0, 0)
         pixels.show()
         time.sleep(wait)
 
 def display_Cube():
-    for i in range(15, 20, 1):
+    for i in range(current_mode_length):
         pixels[i]=(145, 0, 255)
     pixels.show()
 
 def display_Cone():
-    for i in range(15, 20, 1):
+    for i in range(current_mode_length):
         pixels[i]=(255, 165, 0)
     pixels.show()
 
 def blinkingCube():
-    for cube in range(15):
+    for cube in range(current_mode_length):
         pixels[cube]=(145, 0, 255)
     pixels.show()
     time.sleep(0.3)
-    for cube in range(15):
+    for cube in range(current_mode_length):
         pixels[cube]=(0, 0, 0)
     pixels.show()
     time.sleep(0.2)
 
 def blinkingCone():
-    for cone in range(15):
+    for cone in range(current_mode_length):
         pixels[cone]=(255, 165, 0)
     pixels.show()
     time.sleep(0.3)
-    for cone in range(15):
+    for cone in range(current_mode_length):
         pixels[cone]=(0, 0, 0)
     pixels.show()
     time.sleep(0.2)
 
 def display_alliance(color):
-    for i in range(15, 20, 1):
+    for i in range(20-conecube_length, 20, 1):
         pixels[i]=color
     pixels.show()
+
+
+def moving_rainbow():    
+    global movingRainbow
+    current_mode = read_current_mode()
+    read_conecube_mode()
+    for r in range(current_mode_length):
+        if read_current_mode() != current_mode:
+            return
+        pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
+        pixels.show()
+    movingRainbow = movingRainbow+1
 
 '''
 #############################################
@@ -182,20 +203,27 @@ def read_current_mode():
     temp4 = int(pin13.value)<<4
     return (temp+temp1+temp2+temp3+temp4)
 
-
 '''
+#########################################################
+#######   get current input from robot for cone/cube
+'''
+
+def read_conecube_mode():
+    if pin_conecube.value == 1:
+        display_alliance((145, 0, 255))
+    else:
+        display_alliance((255, 165, 0))
+    pixels.show()
+
+
 #############################################
 ######  main loop
 #############################################
-'''
+
 def main():
     # Read mode and alliance from pins
     mode = read_current_mode()
 
-    if pin_alliance.value == 1:
-        display_alliance((145, 0, 255))
-    else:
-        display_alliance((255, 165, 0))
     
     #Select display option
     if mode == 31:
@@ -205,7 +233,7 @@ def main():
     elif mode == 2:
         enabled(mode)
     elif mode == 3:
-        display_Cube()
+        movingRainbow()
     elif mode == 4:
         blinkingCone()
     elif mode == 5:
