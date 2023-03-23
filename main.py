@@ -116,11 +116,11 @@ def enabled(current_mode):
         wait_and_check(wait)
 
 def no_code():
-    for noCode in range(current_mode_length):
-        pixels[noCode]=(255, 0, 0)
+    for noCode in range(num_pixels):
+        pixels[noCode]=(80, 80, 80)
     pixels.show()
     wait_and_check(0.3)
-    for noCode in range(current_mode_length):
+    for noCode in range(num_pixels):
         pixels[noCode]=(0, 0, 0)
     pixels.show()
     wait_and_check(0.3)
@@ -246,7 +246,7 @@ def main():
         elif mode == 5:
             blinkingCube()
         else:
-            disabled()
+            no_code()
     except ModeChangedException:
         # Mode changed, restart loop
         pass
