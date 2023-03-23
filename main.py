@@ -51,6 +51,8 @@ current_mode_length = 20-conecube_length
 
 movingRainbow = 0
 
+mode = 31
+
 '''
 #############################################
 ######  setup pins for input
@@ -102,7 +104,7 @@ def enabled(current_mode):
         for i in range(current_mode_length):
             pixels[i]=(0, 255*countdown/steps, 0)
         pixels.show()
-        time.sleep(wait)
+        wait_and_check(wait)
 
     for countup in range(1, steps, 1):
         update_conecube_mode()
@@ -111,50 +113,50 @@ def enabled(current_mode):
         for i in range(current_mode_length):
             pixels[i]=(0, 255*countup/steps, 0)
         pixels.show()
-        time.sleep(wait)
+        wait_and_check(wait)
 
 def no_code():
     for noCode in range(current_mode_length):
         pixels[noCode]=(255, 0, 0)
     pixels.show()
-    time.sleep(0.3)
+    wait_and_check(0.3)
     for noCode in range(current_mode_length):
         pixels[noCode]=(0, 0, 0)
     pixels.show()
-    time.sleep(0.3)
+    wait_and_check(0.3)
 
 def disabled():
     for countdown in range(steps, 1, -1):
         for i in range(num_pixels):
             pixels[i]=(255*countdown/steps, 0, 0)
         pixels.show()
-        time.sleep(wait)
+        wait_and_check(wait)
 
     for countup in range(1, steps, 1):
         for i in range(num_pixels):
             pixels[i]=(255*countup/steps, 0, 0)
         pixels.show()
-        time.sleep(wait)
+        wait_and_check(wait)
 
 def blinkingCube():
     for cube in range(current_mode_length):
         pixels[cube]=(145, 0, 255)
     pixels.show()
-    time.sleep(0.3)
+    wait_and_check(0.3)
     for cube in range(current_mode_length):
         pixels[cube]=(0, 0, 0)
     pixels.show()
-    time.sleep(0.2)
+    wait_and_check(0.2)
 
 def blinkingCone():
     for cone in range(current_mode_length):
         pixels[cone]=(255, 165, 0)
     pixels.show()
-    time.sleep(0.3)
+    wait_and_check(0.3)
     for cone in range(current_mode_length):
         pixels[cone]=(0, 0, 0)
     pixels.show()
-    time.sleep(0.2)
+    wait_and_check(0.2)
 
 def display_cone_cube(color):
     for i in range(20-conecube_length, 20, 1):
@@ -198,31 +200,43 @@ def update_conecube_mode():
         display_cone_cube((255, 165, 0))
     pixels.show()
 
+class ModeChangedException(Exception):
+    pass
+
+def wait_and_check(durationS):
+    if mode == read_current_mode():
+        time.sleep(durationS)
+    else:
+        raise ModeChangedException("Mode changed")
 
 #############################################
 ######  main loop
 #############################################
 
 def main():
+    global mode
     # Read mode and alliance from pins
     mode = read_current_mode()
 
-    
-    #Select display option
-    if mode == 31:
-        no_code()
-    elif mode == 1:
-        disabled()
-    elif mode == 2:
-        enabled(mode)
-    elif mode == 3:
-        moving_rainbow()
-    elif mode == 4:
-        blinkingCone()
-    elif mode == 5:
-        blinkingCube()
-    else:
-        disabled()
+    try:    
+        #Select display option
+        if mode == 31:
+            no_code()
+        elif mode == 1:
+            disabled()
+        elif mode == 2:
+            enabled(mode)
+        elif mode == 3:
+            moving_rainbow()
+        elif mode == 4:
+            blinkingCone()
+        elif mode == 5:
+            blinkingCube()
+        else:
+            disabled()
+    except ModeChangedException:
+        # Mode changed, restart loop
+        pass
 
 while True:
     main()
@@ -234,31 +248,31 @@ while True:
     for lowBattery in range(20):
         pixels[lowBattery]=(0, 255, 0)
     pixels.show()
-    time.sleep(5/count)
+    wait_and_check(5/count)
     for lowBattery in range(20):
         pixels[lowBattery]=(240, 70, 0)
     pixels.show()
-    time.sleep(1)
+    wait_and_check(1)
 
     if count < 4:
         for lowBattery in range(20):
             pixels[lowBattery]=(0, 255, 0)
         pixels.show()
-        time.sleep(5/count)
+        wait_and_check(5/count)
         for lowBattery in range(20):
             pixels[lowBattery]=(240, 70, 0)
         pixels.show()
-        time.sleep(1)
+        wait_and_check(1)
 
     elif count >= 4 and count >= 8:
         for lowBattery in range(20):
             pixels[lowBattery]=(240, 70, 0)
         pixels.show()
-        time.sleep(5/(count-3))
+        wait_and_check(5/(count-3))
         for lowBattery in range(20):
             pixels[lowBattery]=(255, 0, 0)
         pixels.show()
-        time.sleep(1)
+        wait_and_check(1)
 
     else:
         pixels[lowBattery]=(255, 0, 0)'''
