@@ -41,7 +41,7 @@ from rainbowio import colorwheel
 pixel_pin = board.D5
 num_pixels = 20
 
-pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=0.3, auto_write=False)
+pixels = neopixel.NeoPixel(pixel_pin, num_pixels, brightness=1, auto_write=False)
 
 steps=30
 wait=0.04
@@ -176,11 +176,16 @@ def display_cone_cube(color):
         pixels[i]=color
 
 
-def moving_rainbow():    
+def moving_rainbow(switch):    
     global movingRainbow
+    length = 0
+    if switch:
+        length = 20
+    else:
+        length = current_mode_length
     current_mode = read_current_mode()
     update_conecube_mode()
-    for r in range(current_mode_length):
+    for r in range(length):
         if read_current_mode() != current_mode:
             return
         pixels[r]=colorwheel((255/20*(r+movingRainbow))%255)  
@@ -240,11 +245,11 @@ def main():
         elif mode == 2:
             enabled(mode)
         elif mode == 3:
-            moving_rainbow()
+            moving_rainbow(0)
         elif mode == 4:
             disabled_with_auto()
-        elif mode == 5:
-            blinkingCube()
+        elif mode == 5: #arm in position
+            moving_rainbow(1)
         else:
             no_code()
     except ModeChangedException:
