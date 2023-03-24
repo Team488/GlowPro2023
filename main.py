@@ -245,11 +245,11 @@ def main():
         elif mode == 2:
             enabled(mode)
         elif mode == 3:
-            moving_rainbow(0)
+            moving_rainbow(False)
         elif mode == 4:
             disabled_with_auto()
         elif mode == 5: #arm in position
-            moving_rainbow(1)
+            moving_rainbow(True)
         else:
             no_code()
     except ModeChangedException:
