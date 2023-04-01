@@ -6,17 +6,11 @@ import time
 import board
 import neopixel
 from rainbowio import colorwheel
-
-
 '''
 #############################################
-######  
 ######  INPUT MAP
-######  
 ######  Alliance: [pin7]
 ######  Alliance: 1 = blue, 0 = red
-###### 
-###### 
 ######  Input mapping for light display: 
 ######  [pin13][pin12][pin11][pin10][pin9]
 ###### 
@@ -28,14 +22,11 @@ from rainbowio import colorwheel
 ######  00011   3       cube mode   display_Cube
 ######  00100   4       cone acq.   blinkingCone
 ######  00101   5       cube acq.   blinkingCube
-######  00110   6       cone mode   display_Cone
-######  
-######  
-######  
+######  00110   6       cone mode   display_Cone 
 #############################################
 
 #############################################
-######  setup board output & neopixel light strip objects
+######  setup vars
 #############################################
 '''
 pixel_pin = board.D5
@@ -48,50 +39,38 @@ wait=0.04
 
 conecube_length = 10
 current_mode_length = 20-conecube_length
-
 movingRainbow = 0
-conecube_counter = 0
+current_time = time.time()
 
 mode = 31
-
 '''
 #############################################
-######  setup pins for input
+######  setup input
 #############################################
 '''
-
-#pin7
 pin_conecube = DigitalInOut(board.D7)
 pin_conecube.direction = Direction.INPUT
 pin_conecube.pull = Pull.DOWN
 
-#pin9
 pin9 = DigitalInOut(board.D9)
 pin9.direction = Direction.INPUT
 pin9.pull = Pull.DOWN
 
-#pin10
 pin10 = DigitalInOut(board.D10)
 pin10.direction = Direction.INPUT
 pin10.pull = Pull.DOWN
 
-#pin11
 pin11 = DigitalInOut(board.D11)
 pin11.direction = Direction.INPUT
 pin11.pull = Pull.DOWN
 
-#pin12
 pin12 = DigitalInOut(board.D12)
 pin12.direction = Direction.INPUT
 pin12.pull = Pull.DOWN
 
-#pin13
 pin13 = DigitalInOut(board.D13)
 pin13.direction = Direction.INPUT
 pin13.pull = Pull.DOWN
-
-
-
 '''
 #############################################
 ######  color display functions
@@ -146,35 +125,16 @@ def disabled_with_auto():
         pixels.brightness = countdown/steps
         pixels.show()
         wait_and_check(wait)
-
     for countup in range(1, steps, 1):
         pixels.brightness = countup/steps
         pixels.show()
         wait_and_check(wait)
 
-def blinkingCube():
-    for cube in range(current_mode_length):
-        pixels[cube]=(145, 0, 255)
-    pixels.show()
-    wait_and_check(0.3)
-    for cube in range(current_mode_length):
-        pixels[cube]=(0, 0, 0)
-    pixels.show()
-    wait_and_check(0.2)
-
-def blinkingCone():
-    for cone in range(current_mode_length):
-        pixels[cone]=(255, 165, 0)
-    pixels.show()
-    wait_and_check(0.3)
-    for cone in range(current_mode_length):
-        pixels[cone]=(0, 0, 0)
-    pixels.show()
-    wait_and_check(0.2)
-
 def display_cone_cube(color):
-    global conecube_counter 
-    if conecube_counter % 2 == 0:
+    global current_time 
+    if time.time() - current_time < 0.25:
+        return
+    if current_time % 2 == 0:
         for i in range(20-conecube_length, 20, 1):
             if i >= (20-conecube_length)+conecube_length/2: pixels[i]=color
             else: pixels[i]=(255,255,255)
@@ -182,11 +142,8 @@ def display_cone_cube(color):
         for i in range(20-conecube_length, 20, 1):
             if i >= (20-conecube_length)+conecube_length/2: pixels[i]=(255,255,255)
             else: pixels[i]=color
-    conecube_counter += 1
-    wait_and_check(0.15)
+    current_time = time.time()
     
-
-
 def moving_rainbow(switch):    
     global movingRainbow
     length = 0
@@ -203,19 +160,8 @@ def moving_rainbow(switch):
         pixels.show()
     movingRainbow = movingRainbow+1
 
-'''
-#############################################
-######  get current input from robot
-#############################################
-'''
-
 def read_current_mode():
     return int(pin9.value)+int(pin10.value<<1)+int(pin11.value<<2)+int(pin12.value<<3)+int(pin13.value<<4) #(temp+temp1+temp2+temp3+temp4)
-
-'''
-#########################################################
-#######   get current input from robot for cone/cube
-'''
 
 def update_conecube_mode():
     if pin_conecube.value == 1:
@@ -233,17 +179,11 @@ def wait_and_check(durationS):
     else:
         raise ModeChangedException("Mode changed")
 
-#############################################
-######  main loop
-#############################################
 
 def main():
     global mode
-    # Read mode and alliance from pins
     mode = read_current_mode()
-
     try:    
-        #Select display option
         if mode == 31:
             no_code()
         elif mode == 1:
@@ -254,12 +194,11 @@ def main():
             moving_rainbow(False)
         elif mode == 4:
             disabled_with_auto()
-        elif mode == 5: #arm in position
+        elif mode == 5:
             moving_rainbow(True)
         else:
             no_code()
     except ModeChangedException:
-        # Mode changed, restart loop
         pass
 
 while True:
