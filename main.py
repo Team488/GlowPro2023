@@ -50,6 +50,7 @@ conecube_length = 10
 current_mode_length = 20-conecube_length
 
 movingRainbow = 0
+conecube_counter = 0
 
 mode = 31
 
@@ -172,8 +173,18 @@ def blinkingCone():
     wait_and_check(0.2)
 
 def display_cone_cube(color):
-    for i in range(20-conecube_length, 20, 1):
-        pixels[i]=color
+    global conecube_counter 
+    if conecube_counter % 2 == 0:
+        for i in range(20-conecube_length, 20, 1):
+            if i >= (20-conecube_length)+conecube_length/2: pixels[i]=color
+            else: pixels[i]=(255,255,255)
+    else:
+        for i in range(20-conecube_length, 20, 1):
+            if i >= (20-conecube_length)+conecube_length/2: pixels[i]=(255,255,255)
+            else: pixels[i]=color
+    conecube_counter += 1
+    wait_and_check(0.15)
+    
 
 
 def moving_rainbow(switch):    
@@ -199,12 +210,7 @@ def moving_rainbow(switch):
 '''
 
 def read_current_mode():
-    temp = int(pin9.value)
-    temp1 = int(pin10.value)<<1
-    temp2 = int(pin11.value)<<2
-    temp3 = int(pin12.value)<<3
-    temp4 = int(pin13.value)<<4
-    return (temp+temp1+temp2+temp3+temp4)
+    return int(pin9.value)+int(pin10.value<<1)+int(pin11.value<<2)+int(pin12.value<<3)+int(pin13.value<<4) #(temp+temp1+temp2+temp3+temp4)
 
 '''
 #########################################################
@@ -258,41 +264,3 @@ def main():
 
 while True:
     main()
-
-
-####### EXTRAS ########
-
-'''def lowBattery():
-    for lowBattery in range(20):
-        pixels[lowBattery]=(0, 255, 0)
-    pixels.show()
-    wait_and_check(5/count)
-    for lowBattery in range(20):
-        pixels[lowBattery]=(240, 70, 0)
-    pixels.show()
-    wait_and_check(1)
-
-    if count < 4:
-        for lowBattery in range(20):
-            pixels[lowBattery]=(0, 255, 0)
-        pixels.show()
-        wait_and_check(5/count)
-        for lowBattery in range(20):
-            pixels[lowBattery]=(240, 70, 0)
-        pixels.show()
-        wait_and_check(1)
-
-    elif count >= 4 and count >= 8:
-        for lowBattery in range(20):
-            pixels[lowBattery]=(240, 70, 0)
-        pixels.show()
-        wait_and_check(5/(count-3))
-        for lowBattery in range(20):
-            pixels[lowBattery]=(255, 0, 0)
-        pixels.show()
-        wait_and_check(1)
-
-    else:
-        pixels[lowBattery]=(255, 0, 0)'''
-
-
