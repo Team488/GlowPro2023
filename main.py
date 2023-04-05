@@ -6,6 +6,11 @@ import time
 import board
 import neopixel
 from rainbowio import colorwheel
+
+from microcontroller import watchdog as w
+from watchdog import WatchDogMode
+w.timeout=1.0 
+w.mode = WatchDogMode.RAISE
 '''
 #############################################
 ######  INPUT MAP
@@ -76,22 +81,22 @@ pin13.pull = Pull.DOWN
 ######  color display functions
 #############################################
 '''
-def enabled(current_mode):
+
+def fade(r, g, b, current_mode):
     for countdown in range(steps, 1, -1):
         update_conecube_mode()
         if read_current_mode() != current_mode:
             return
         for i in range(current_mode_length):
-            pixels[i]=(0, 255*countdown/steps, 0)
+            pixels[i]=(r*countdown/steps, g*countdown/steps, b*countdown/steps)
         pixels.show()
         wait_and_check(wait)
-
     for countup in range(1, steps, 1):
         update_conecube_mode()
         if read_current_mode() != current_mode:
             return
         for i in range(current_mode_length):
-            pixels[i]=(0, 255*countup/steps, 0)
+            pixels[i]=(r*countup/steps, g*countup/steps, b*countup/steps)
         pixels.show()
         wait_and_check(wait)
 
@@ -104,31 +109,6 @@ def no_code():
         pixels[noCode]=(0, 0, 0)
     pixels.show()
     wait_and_check(0.3)
-
-def disabled():
-    for countdown in range(steps, 1, -1):
-        for i in range(num_pixels):
-            pixels[i]=(255*countdown/steps, 0, 0)
-        pixels.show()
-        wait_and_check(wait)
-
-    for countup in range(1, steps, 1):
-        for i in range(num_pixels):
-            pixels[i]=(255*countup/steps, 0, 0)
-        pixels.show()
-        wait_and_check(wait)
-
-def disabled_with_auto():
-    for i in range(num_pixels):
-        pixels[i]=(20, 50, 20)
-    for countdown in range(steps, 1, -1):
-        pixels.brightness = countdown/steps
-        pixels.show()
-        wait_and_check(wait)
-    for countup in range(1, steps, 1):
-        pixels.brightness = countup/steps
-        pixels.show()
-        wait_and_check(wait)
 
 def display_cone_cube(color):
     global current_time 
@@ -187,13 +167,13 @@ def main():
         if mode == 31:
             no_code()
         elif mode == 1:
-            disabled()
+            fade(255, 0, 0, mode) #disabled
         elif mode == 2:
-            enabled(mode)
+            fade(0, 255, 0, mode) #enabled
         elif mode == 3:
             moving_rainbow(False)
         elif mode == 4:
-            disabled_with_auto()
+            fade(20, 50, 20, mode) #disabled with auto
         elif mode == 5:
             moving_rainbow(True)
         else:
@@ -202,4 +182,5 @@ def main():
         pass
 
 while True:
+    w.feed()
     main()
