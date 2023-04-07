@@ -118,9 +118,9 @@ def disabled():
         pixels.show()
         wait_and_check(wait)
 
-def disabled_with_auto():
+def disabled_with_auto(color):
     for i in range(num_pixels):
-        pixels[i]=(20, 50, 20)
+        pixels[i]=color
     for countdown in range(steps, 1, -1):
         pixels.brightness = countdown/steps
         pixels.show()
@@ -179,6 +179,22 @@ def wait_and_check(durationS):
     else:
         raise ModeChangedException("Mode changed")
 
+def unknown(len):
+    for i in range(len):
+        pixels[i]=(0, 255, 0)
+    for countdown in range(steps, 1, -1):
+        pixels.brightness = countdown/steps
+        pixels.show()
+        wait_and_check(wait)
+    for countup in range(1, steps, 1):
+        pixels.brightness = countup/steps
+        pixels.show()
+        wait_and_check(wait)
+
+def display_Cone():
+    for i in range(15, 20, 1):
+        pixels[i]=(255, 165, 0)
+    pixels.show()
 
 def main():
     global mode
@@ -193,11 +209,13 @@ def main():
         elif mode == 3:
             moving_rainbow(False)
         elif mode == 4:
-            disabled_with_auto()
+            disabled_with_auto((20, 50, 20))
         elif mode == 5:
             moving_rainbow(True)
+        elif mode == 6:
+            disabled_with_auto((0, 150, 0))
         else:
-            no_code()
+            unknown(mode)
     except ModeChangedException:
         pass
 
