@@ -6,6 +6,11 @@ import time
 import board
 import neopixel
 from rainbowio import colorwheel
+
+from microcontroller import watchdog as w
+from watchdog import WatchDogMode
+w.timeout=1.0 
+w.mode = WatchDogMode.RESET
 '''
 #############################################
 ######  INPUT MAP
@@ -174,6 +179,7 @@ class ModeChangedException(Exception):
     pass
 
 def wait_and_check(durationS):
+    w.feed()
     if mode == read_current_mode():
         time.sleep(durationS)
     else:
@@ -215,7 +221,7 @@ def main():
         elif mode == 6:
             disabled_with_auto((0, 150, 0))
         else:
-            unknown(mode)
+            unknown(min(mode,20))
     except ModeChangedException:
         pass
 
